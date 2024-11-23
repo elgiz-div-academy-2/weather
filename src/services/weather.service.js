@@ -1,4 +1,4 @@
-const { format } = require("date-fns");
+const { format, differenceInDays } = require("date-fns");
 const config = require("../config");
 const cityWeatherModel = require("../models/city-weather.model");
 const { fetchWeather } = require("./weather-api.service");
@@ -32,14 +32,38 @@ const createCityWeather = async (cityName) => {
   }
 };
 
-const getWeatherList = async () => {
-  let date = format(new Date(), "yyyy-MM-dd");
-  let list = await cityWeatherModel.find({ date });
+const deleteOutdatedWeather = async (city) => {
+  let list = await getWeatherList({ city }, { ignoreDate: true });
+  for (let cityWeather of list) {
+    let cityDate = new Date(cityWeather.date);
+    if (differenceInDays(new Date(), cityDate) > 0) {
+      await cityWeatherModel.deleteOne({ _id: cityWeather._id });
+    }
+  }
+};
+
+const getWeatherList = async (query = {}, { ignoreDate = false } = {}) => {
+  let { date, city } = query;
+
+  if (!date && !ignoreDate) date = format(new Date(), "yyyy-MM-dd");
+
+  let where = {};
+
+  if (date) {
+    where.date = date;
+  }
+  if (city)
+    where.city = {
+      $regex: new RegExp(city, "i"),
+    };
+
+  let list = await cityWeatherModel.find(where);
   return list;
 };
 
 const weatherService = {
   createCityWeather,
+  deleteOutdatedWeather,
   getWeatherList,
 };
 

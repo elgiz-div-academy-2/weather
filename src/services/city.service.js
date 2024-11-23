@@ -1,10 +1,14 @@
+const cityWeatherModel = require("../models/city-weather.model");
 const cityModel = require("../models/city.model");
 const { checkCityName } = require("./weather-api.service");
 const weatherService = require("./weather.service");
 
 const getCities = () => cityModel.find();
 
-const getCity = (id) => {};
+const getCity = (id) => cityModel.findById(id);
+
+const getCityByName = (name) =>
+  cityModel.findOne({ name: new RegExp(name, "i") });
 
 const createCity = async (name) => {
   let isNameValid = await checkCityName(name);
@@ -24,11 +28,19 @@ const createCity = async (name) => {
   }
 };
 
-const deleteCity = (id) => {};
+const deleteCity = async (id) => {
+  let city = await getCity(id);
+  if (!city) return false;
+
+  await cityWeatherModel.deleteMany({ name: city.name });
+
+  return await cityModel.deleteOne({ _id: id });
+};
 
 const cityService = {
   getCities,
   getCity,
+  getCityByName,
   createCity,
   deleteCity,
 };

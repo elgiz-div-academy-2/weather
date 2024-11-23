@@ -4,6 +4,6 @@ const weatherController = require("../controllers/weather.controller");
 const weatherRouter = Router();
 
 weatherRouter.get("/", weatherController.getWeatherList);
-weatherRouter.get("/:city", () => {});
+weatherRouter.get("/:city", weatherController.getCityWeatherList);
 
 module.exports = weatherRouter;
